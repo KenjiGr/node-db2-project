@@ -1,11 +1,12 @@
-const Car = require('./cars-model')
-const vin = require('vin-validator')
+const Car = require('./cars-model');
+const vinValidator = require('vin-validator');
 
 const checkCarId = async (req, res, next) => {
   try{
     const car = await Car.getById(req.params.id)
    if(!car) {
-    next({status: 404, message: 'not found'})
+    res.status(404).message({message: 'not found'})
+    next()
    }else {
      req.car = car
      next()
@@ -16,51 +17,42 @@ const checkCarId = async (req, res, next) => {
 }
 
 const checkCarPayload = (req, res, next) => {
-  if(!req.body.vin) return next({
-    status:400,
-    message: 'vin is missing'
-  }) 
-  if(!req.body.make) return next({
-    status:400,
-    message: 'make is missing'
-  }) 
-  if(!req.body.model) return next({
-    status:400,
-    message: 'model is missing'
-  }) 
-  if(!req.body.mileage) return next({
-    status:400,
-    message: 'mileage is missing'
+  if(!req.body.vin){ res.status(400).message({message: 'vin is missing'
   }) 
   next()
 }
+  if(!req.body.make){ res.status(400).message({message: 'make is missing'
+  }) 
+  next()
+}
+  if(!req.body.model){ res.status(400).message({message: 'model is missing'
+  }) 
+  next()
+}
+  if(!req.body.mileage){ res.status(400).message({
+    message: 'mileage is missing'
+  }) 
+  next()
+}else{
+  next()
+}
+}
 
 const checkVinNumberValid = async (req, res, next) => {
-  if(vin.validate(req.body.vin)){
-    next()
+  if(Car.getAll().includes(req.body.vin)){
+    res.status(400).message({message: `vin ${req.body.vin} is invalid`})
   }else{
-    next({
-      status: 400, 
-      message: `vin ${req.body.vin} is invalid`
-    })
+    next()
   }
 
 }
 
 const checkVinNumberUnique = async (req, res, next) => {
-  try{
-   const existing = await Cars.getByVin(req.body.vin) 
-   if(!existing){
-     next()
-   }else{
-     next({
-       status: 400,
-       message: `vin ${req.body.vin} already exists`
-     })
-   }
-}catch (err){
-  next(err)
-}
+  if(vinValidator.validate(req.body.vin)){
+    next()
+  }else{
+    res.status(400).message({message: `vin ${req.body.vin} is invalid`})
+  }
 }
 module.exports = {
   checkCarId,
